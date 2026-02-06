@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3 VL 32B Interface</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #8b5cf6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 800px; background: var(--card); border-radius: 12px; padding: 25px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+        #chat-window { height: 450px; overflow-y: auto; border: 1px solid #334155; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #0b1120; }
+        .input-area { display: flex; gap: 10px; }
+        input[type="text"] { flex-grow: 1; padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
+        input[type="text"]:focus { border-color: var(--accent); }
+        button { padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        .msg { margin-bottom: 15px; padding: 10px; border-radius: 6px; }
+        .user { background: #334155; align-self: flex-end; }
+        .ai { background: #1e293b; border-left: 4px solid var(--accent); }
+        .error { color: #ef4444; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="margin-top:0">Qwen3 VL 32B Instruct</h2>
+    <div id="chat-window">
+        <div class="msg ai">Prêt à analyser vos textes ou vos images (via URL).</div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Posez une question sur une image ou un texte...">
+        <button onclick="sendToQwen()">Envoyer</button>
+    </div>
+    <p style="font-size: 11px; color: #64748b; margin-top: 10px;">Modèle: qwen/qwen-3-vl-32b-instruct</p>
+</div>
+
+<script>
+    async function sendToQwen() {
+        const input = document.getElementById('user-input');
+        const window = document.getElementById('chat-window');
+        const text = input.value.trim();
+
+        if (!text) return;
+
+        // Affichage message utilisateur
+        window.innerHTML += `<div class="msg user"><b>Vous:</b> ${text}</div>`;
+        input.value = '';
+        window.scrollTop = window.scrollHeight;
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer VOTRE_CLE_API_ICI", // <--- Remplacez ici
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": window.location.href, 
+                    "X-Title": "Qwen3 Web Test"
+                },
+                body: JSON.stringify({
+                    "model": "qwen/qwen-3-vl-32b-instruct",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                { "type": "text", "text": text }
+                                // Pour une image, on ajouterait ici un objet { type: "image_url", image_url: {...} }
+                            ]
+                        }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.choices && data.choices[0]) {
+                const aiMsg = data.choices[0].message.content;
+                window.innerHTML += `<div class="msg ai"><b>Qwen3:</b> ${aiMsg}</div>`;
+            } else {
+                throw new Error(data.error?.message || "Erreur inconnue");
+            }
+
+        } catch (error) {
+            window.innerHTML += `<div class="msg error"><b>Erreur:</b> ${error.message}</div>`;
+        }
+        
+        window.scrollTop = window.scrollHeight;
+    }
+
+    // Gestion de la touche Entrée
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendToQwen();
+    });
+</script>
+
+</body>
+</html>
