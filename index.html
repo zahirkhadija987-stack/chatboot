@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat avec Solar Pro 3 (Free)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        #chat-window { height: 300px; border: 1px solid #ddd; overflow-y: auto; padding: 15px; margin-bottom: 15px; background: #fff; border-radius: 5px; }
+        .input-group { display: flex; gap: 10px; }
+        input[type="text"] { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background-color: #f36f21; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #d65a1a; }
+        .user-msg { color: #333; margin-bottom: 10px; }
+        .ai-msg { color: #2c3e50; background: #ecf0f1; padding: 8px; border-radius: 5px; margin-bottom: 10px; }
+        .loading { color: #888; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Upstage Solar Pro 3</h2>
+    <div id="chat-window">
+        <div class="ai-msg">Bonjour ! Posez-moi une question via l'API Solar Pro 3.</div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="user-input" placeholder="Écrivez votre message ici...">
+        <button onclick="askSolar()">Envoyer</button>
+    </div>
+</div>
+
+<script>
+    async function askSolar() {
+        const inputField = document.getElementById('user-input');
+        const chatWindow = document.getElementById('chat-window');
+        const userText = inputField.value.trim();
+
+        if (!userText) return;
+
+        // Afficher le message de l'utilisateur
+        chatWindow.innerHTML += `<div class="user-msg"><strong>Vous:</strong> ${userText}</div>`;
+        inputField.value = '';
+        
+        // Afficher un indicateur de chargement
+        const loadingId = "loading-" + Date.now();
+        chatWindow.innerHTML += `<div class="ai-msg loading" id="${loadingId}">Solar est en train de réfléchir...</div>`;
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer VOTRE_CLE_API_OPENROUTER", // <--- METTEZ VOTRE CLÉ ICI
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "upstage/solar-pro-3:free",
+                    "messages": [
+                        { "role": "user", "content": userText }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            const aiResponse = data.choices[0].message.content;
+
+            // Remplacer le chargement par la réponse réelle
+            document.getElementById(loadingId).classList.remove('loading');
+            document.getElementById(loadingId).innerHTML = `<strong>Solar Pro:</strong> ${aiResponse}`;
+
+        } catch (error) {
+            document.getElementById(loadingId).innerHTML = `<span style="color:red">Erreur : Impossible de contacter l'API.</span>`;
+            console.error("Erreur API:", error);
+        }
+
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Permettre d'envoyer avec la touche "Entrée"
+    document.getElementById('user-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') askSolar();
+    });
+</script>
+
+</body>
+</html>
