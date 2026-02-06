@@ -3,59 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma Super Page</title>
+    <title>Interface Trinity AI</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f9;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 { color: #333; }
-        button {
-            padding: 10px 15px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover { background-color: #0056b3; }
+        :root { --primary: #6366f1; --bg: #0f172a; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; }
+        .chat-container { width: 100%; max-width: 600px; background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        #chat-box { height: 400px; overflow-y: auto; padding: 20px; border-bottom: 1px solid #334155; }
+        .message { margin-bottom: 15px; padding: 10px 15px; border-radius: 8px; line-height: 1.4; }
+        .user { background: var(--primary); align-self: flex-end; margin-left: 20%; }
+        .ai { background: #334155; margin-right: 20%; }
+        .input-area { display: flex; padding: 15px; gap: 10px; }
+        input { flex: 1; padding: 12px; border-radius: 6px; border: none; outline: none; background: #0f172a; color: white; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loader { font-size: 12px; color: #94a3b8; display: none; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Bienvenue sur ma page !</h1>
-        <p>Ceci est un exemple de code généré pour vous montrer la structure de base.</p>
-        
-        <ul>
-            <li>Structure sémantique</li>
-            <li>Style intégré (CSS)</li>
-            <li>Interactivité simple</li>
-        </ul>
-
-        <button id="monBouton">Cliquez-moi !</button>
-        <p id="message"></p>
+<div class="chat-container">
+    <div id="chat-box">
+        <div class="message ai">Bonjour ! Je suis <strong>Trinity</strong>. Comment puis-je vous aider aujourd'hui ?</div>
     </div>
+    <div id="loading" class="loader" style="padding-left: 20px;">Trinity est en train de réfléchir...</div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Posez votre question...">
+        <button id="send-btn">Envoyer</button>
+    </div>
+</div>
 
-    <script>
-        const bouton = document.getElementById('monBouton');
-        const message = document.getElementById('message');
+<script>
+    const API_KEY = "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";
+    const MODEL = "arcee-ai/trinity-large-preview:free";
 
-        bouton.addEventListener('click', () => {
-            message.textContent = "Bravo ! Le JavaScript fonctionne aussi. 🎉";
-            message.style.color = "green";
-        });
-    </script>
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const loader = document.getElementById('loading');
+
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        // Ajouter le message utilisateur à l'écran
+        appendMessage('user', text);
+        userInput.value = '';
+        sendBtn.disabled = true;
+        loader.style.display = 'block';
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": MODEL,
+                    "messages": [{ "role": "user", "content": text }]
+                })
+            });
+
+            const data = await response.json();
+            const aiReply = data.choices[0].message.content;
+            appendMessage('ai', aiReply);
+        } catch (error) {
+            appendMessage('ai', "Erreur : Impossible de contacter l'API. Vérifiez votre connexion.");
+            console.error(error);
+        } finally {
+            sendBtn.disabled = false;
+            loader.style.display = 'none';
+        }
+    }
+
+    function appendMessage(role, text) {
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+        div.innerText = text;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+
 </body>
 </html>
