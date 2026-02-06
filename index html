@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Super Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Bienvenue sur ma page !</h1>
+        <p>Ceci est un exemple de code généré pour vous montrer la structure de base.</p>
+        
+        <ul>
+            <li>Structure sémantique</li>
+            <li>Style intégré (CSS)</li>
+            <li>Interactivité simple</li>
+        </ul>
+
+        <button id="monBouton">Cliquez-moi !</button>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        const bouton = document.getElementById('monBouton');
+        const message = document.getElementById('message');
+
+        bouton.addEventListener('click', () => {
+            message.textContent = "Bravo ! Le JavaScript fonctionne aussi. 🎉";
+            message.style.color = "green";
+        });
+    </script>
+</body>
+</html>
